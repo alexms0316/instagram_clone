@@ -4,11 +4,11 @@ from django.shortcuts import render
 
 import json, re, bcrypt, jwt
 
-from django.http      import JsonResponse, HttpResponse
-from django.views     import View
-from my_settings      import SECRET_KEY
-from users.models     import User
-from users.validation import Validation
+from django.http            import JsonResponse, HttpResponse
+from django.views           import View
+from my_settings            import SECRET_KEY
+from users.models           import User
+from users.validation       import Validation
 from django.core.exceptions import ValidationError
 from django.conf            import settings
 
@@ -24,8 +24,8 @@ class SignUpView(View):
               Validation.email_validate(email)
               Validation.password_validate(password)
 
-              if User.objects.filter(email=email).exists():
-                  return JsonResponse({'message': 'ALREADY_EXISTS'}, status = 400)
+              #if User.objects.filter(email=email).exists():
+                  #return JsonResponse({'message': 'ALREADY_EXISTS'}, status = 400)
 
               hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
