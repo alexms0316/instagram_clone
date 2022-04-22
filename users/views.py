@@ -2,11 +2,12 @@ from django.shortcuts import render
 
 # Create your views here.
 
-import json, re, bcrypt, jwt
+import json, re 
+import bcrypt, jwt
 
 from django.http            import JsonResponse, HttpResponse
 from django.views           import View
-from my_settings            import SECRET_KEY
+from my_settings            import SECRET_KEY, ALGORITHM
 from users.models           import User
 from users.validation       import Validation
 from django.core.exceptions import ValidationError
@@ -18,22 +19,18 @@ class SignUpView(View):
               data         = json.loads(request.body)
               email        = data['email']
               password     = data['password']
-              name         = data['name']
-              phone_number = data['phone_number']
 
               Validation.email_validate(email)
               Validation.password_validate(password)
 
-              #if User.objects.filter(email=email).exists():
-                  #return JsonResponse({'message': 'ALREADY_EXISTS'}, status = 400)
+              if User.objects.filter(email=email).exists():
+                  return JsonResponse({'message': 'ALREADY_EXISTS'}, status = 400)
 
               hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
               User.objects.create(
-                  name         = name,
                   email        = email,
                   password     = hashed_password,
-                  phone_number = phone_number
                   )
               return JsonResponse({'message': 'SUCCESS'}, status = 201)
 
@@ -52,7 +49,7 @@ class LoginView(View):
               if not bcrypt.checkpw(data['password'].encode('utf-8'), user.password.encode('utf-8')):
                  return JsonResponse({"message" : "INVALID_PASSWORD"}, status=401)
 
-              access_token = jwt.encode({"id" : user.id}, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
+              access_token = jwt.encode({"id" : user.id}, SECRET_KEY, algorithm = ALGORITHM)
 
               return JsonResponse({
                   "message"      : "SUCCESS",

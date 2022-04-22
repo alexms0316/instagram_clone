@@ -1,6 +1,5 @@
-from django.http  import JsonResponse, HttpResponse
 import re
-from users.models import User
+
 from django.core.exceptions import ValidationError
 
 class Validation:
