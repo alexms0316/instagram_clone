@@ -1,3 +1,4 @@
+Instagram_Clone_Coding_Practice
 
 - Django initial setting
 - Modeling
@@ -6,3 +7,4 @@
 - Encryption
 - Access_token(JWT)
 - Postings
+- Comments
