@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.views     import View
 from django.http      import JsonResponse
 from users.models     import User
-from postings.models  import Posting, Image, Comment
+from postings.models  import Posting, Image, Comment, Like
 from json.decoder     import JSONDecodeError
 from users.decorator  import log_in_decorator
 
@@ -102,3 +102,35 @@ class CommentSearchView(View):
         ]
 
         return JsonResponse({'data':comment_list}, status=200)
+
+class LikeView(View):
+    @log_in_decorator
+    def post(self, request):
+        try :
+            data = json.loads(request.body)
+            user = request.user
+
+            posting_id = data.get('posting_id', None)
+
+            if not posting_id:
+                return JsonResponse({'message':'KEY_ERROR'}, status=400)
+
+            if not Posting.objects.filter(id=posting_id).exists():
+                return JsonResponse({'message':"POSTING_DOES_NOT_EXIST"}, status=404)
+            
+            posting = Posting.objects.get(id=posting_id)
+
+            if Like.objects.filter(user=user, posting=posting).exists():
+                Like.objects.filter(user=user, posting=posting).delete()
+                like_count = Like.objects.filter(posting=posting).count()
+                return JsonResponse({'message': 'SUCCESS', 'like_count':like_count}, status=200)
+
+            Like.objects.create(
+                user    = user,
+                posting = posting
+            )
+            like_count = Like.objects.filter(posting=posting).count()
+            return JsonResponse({'message': 'SUCCESS', 'like_count': like_count}, status=200)
+
+        except JSONDecodeError:
+            return JsonResponse({'message':'JSON_DECODE_ERROR'}, status=400)
