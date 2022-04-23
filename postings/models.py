@@ -28,8 +28,8 @@ class Comment(models.Model):
 
 class Like(models.Model):
       created_at = models.DateTimeField(auto_now_add=True)
-      user = models.ForeignKey('users.User', on_delete=models.CASCADE)
-      posting = models.ForeignKey('Posting', on_delete=models.CASCADE)
+      user       = models.ForeignKey('users.User', on_delete=models.CASCADE)
+      posting    = models.ForeignKey('Posting', on_delete=models.CASCADE)
 
       class Meta:
           db_table = 'likes'
