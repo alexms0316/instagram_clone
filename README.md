@@ -165,77 +165,134 @@
   
   -> requirements.txt
    ```python
-    touch requirements.txt
-    vi requirements.txt
+   touch requirements.txt
+   vi requirements.txt
     
-    # requirements.txt
-    # pip freeze
-    Django==3.2.4
-    django-cors-headers==3.7.0
-    mysqlclient==2.0.3
+   # requirements.txt
+   # pip freeze
+   Django==3.2.4
+   django-cors-headers==3.7.0
+   mysqlclient==2.0.3
         
-    PyMySQL==1.0.2 # for M1
-    ```
+   PyMySQL==1.0.2 # for M1
+   ```
 
   -> .gitignore
-    ```python
-    # https://www.toptal.com/developers/gitignore
-    # python, pycharm, VisualStudioCode, vim, macOS, Linux, zsh
-    #touch .gitignore
-    #vi .gitignore
+   ```python
+   # https://www.toptal.com/developers/gitignore
+   # python, pycharm, VisualStudioCode, vim, macOS, Linux, zsh
+   #touch .gitignore
+   #vi .gitignore
                 
-    ############################
-    # gitignore.io copy and paste #
-    ############################
-    my_settings.py # Confidential
-    ```
+   # gitignore.io copy and paste 
+
+   my_settings.py # Confidential
+   ```
   -> execute project server
-    ```python
-    # pwd with manage.py
-    python manage.py runserver
-    ```
+   ```python
+   # pwd with manage.py
+   python manage.py runserver
+   ```
 
 ## 4) Create Github Pull Request
 - add & commit & Pull 
-    ```python
-    git checkout feature/branch name
+   ```python
+   git checkout feature/branch name
 
-    git add .
-    git commit -m "commit message"
+   git add .
+   git commit -m "commit message"
     
-    git push origin feature/branch name
-    ```
+   git push origin feature/branch name
+   ```
 
 # 2. Modeling
 
 ## 1) Create User Branch
-    ```python
-     git checkout main #MUST create branch at main
-     git branch feature/branch name
-    ```
+   ```python
+   git checkout main #MUST create branch at main
+   git branch feature/branch name
+   ```
 
 ## 2) Create User App
-    ```python
-     python manage.py startapp users
-    ```
+   ```python
+   python manage.py startapp users
+   ```
 
 ## 3) Create User table
-    ```python
-     # models.py
-     from django.db import models
+   ```python
+   # models.py
+   from django.db import models
 
-     class User(models.Model):
-      email = models.CharField(max_length=100, unique=True)
-      password = models.CharField(max_length=200)
-      created_at = models.DateTimeField(auto_now_add=True)
-      updated_at = models.DateTimeField(auto_now=True)
+   class User(models.Model):
+    email = models.CharField(max_length=100, unique=True)
+    password = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-      class Meta:
-          db_table = 'users'
-    ```
+   class Meta:
+    db_table = 'users'
+   ```
     
 # 3. Signup
 
+## 1) Definition of Signup View
+   ```python
+   # Views.py
+   from django.http      import JsonResponse
+   from users.models     import User
+
+   class SignUpView(View):
+      def post(self, request):
+          try:
+              data         = json.loads(request.body)
+              email        = data['email']
+              password     = data['password']
+
+              Validation.email_validate(email)
+              Validation.password_validate(password)
+
+              if User.objects.filter(email=email).exists():
+                  return JsonResponse({'message': 'ALREADY_EXISTS'}, status = 400)
+
+              User.objects.create(
+                  email        = email,
+                  password     = hashed_password,
+                  )
+              return JsonResponse({'message': 'SUCCESS'}, status = 201)
+
+          except KeyError:
+              return JsonResponse({'message': 'KEY_ERROR'}, status = 400)
+          except ValidationError as error:
+              return JsonResponse({"message": error.message}, status=400)
+   ```
+   ```python
+   # Validation.py
+   import re
+
+   from django.core.exceptions import ValidationError
+
+   class Validation:
+       def email_validate(value):
+           REGEX_EMAIL= '^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9_-]+\.[a-zA-Z0-9-.]+$'
+           if not re.match(REGEX_EMAIL, value):
+               raise ValidationError('INVALID_EMAIL')
+
+       def password_validate(value):
+           REGEX_PASSWORD = '^(?=.*[A-Za-z])(?=.*\d)(?=.*[?!@#$%*&])[A-Za-z\d?!@#$%*&]{8,}$'
+           if not re.match(REGEX_PASSWORD, value):
+               raise ValidationError('INVALID_PASSWORD')
+   ```
+
+## 2) URLconf
+   ```python
+   from django.urls   import path
+   from users.views   import SignUpView
+
+   urlpatterns = [
+       path('/signup', SignUpView.as_view())
+   ]
+   ```
+   
 # 4. Login
 
 # 5. Encryption
