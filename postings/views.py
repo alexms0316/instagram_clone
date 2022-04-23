@@ -61,6 +61,43 @@ class PostingSearchView(View):
 
         return JsonResponse({'data':posting_list}, status=200)
 
+class PostingDetailView(View):
+    @log_in_decorator
+    def delete(self, request, posting_id):
+        user = request.user
+
+        if not Posting.objects.filter(id=posting_id).exists():
+            return JsonResponse({'message':'POSTING_DOES_NOT_EXIST'}, status=404)
+
+        posting = Posting.objects.get(id=posting_id)
+
+        if user != posting.user:
+            return JsonResponse({'message':'INVALID_USER'}, status=401)
+
+        Posting.objects.filter(id=posting.id).delete()
+        return JsonResponse({'message': 'SUCCESS'}, status=200)
+
+    @log_in_decorator
+    def post(self, request, posting_id):
+        try:
+            data = json.loads(request.body)
+            user = request.user
+
+            if not Posting.objects.filter(id=posting_id).exists():
+                return JsonResponse({'message': 'POSTING_DOES_NOT_EXIST'}, status=404)
+
+            posting = Posting.objects.get(id=posting_id)
+
+            if user != posting.user:
+                return JsonResponse({'message':'INVALID_USER'}, status=401)
+
+            posting.content = data.get('content', posting.content)
+            posting.save()
+            return JsonResponse({'message': 'SUCCESS'}, status=201)
+
+        except JSONDecodeError:
+            return JsonResponse({'message':'JSON_DECODE_ERROR'}, status=400)
+
 class CommentView(View):
     @log_in_decorator
     def post(self, request):
@@ -69,7 +106,8 @@ class CommentView(View):
             user = request.user
             content    = data.get('content', None)
             posting_id = data.get('posting_id', None)
-
+            parent_comment_id = data.get('parent_comment_id', None)
+           
             if not (content and posting_id):
                 return JsonResponse({'message':'KEY_ERROR'}, status=400)
 
@@ -81,13 +119,15 @@ class CommentView(View):
             Comment.objects.create(
                 content = content,
                 user    = user,
-                posting = posting
-            )
+                posting = posting,
+                parent_comment_id = parent_comment_id
+                )
 
             return JsonResponse({'message':'SUCCESS'}, status=200)
         
         except JSONDecodeError:
             return JsonResponse({'message':'JSON_DECODE_ERROR'}, status=400)
+        
 
 class CommentSearchView(View):
     def get(self, request, posting_id):
@@ -102,6 +142,22 @@ class CommentSearchView(View):
         ]
 
         return JsonResponse({'data':comment_list}, status=200)
+
+class CommentDetailView(View):
+    @log_in_decorator
+    def delete(self, request, comment_id):
+        user = request.user
+
+        if not Comment.objects.filter(id=comment_id).exists():
+            return JsonResponse({'message':'COMMENT_DOES_NOT_EXIST'}, status=404)
+
+        comment = Comment.objects.get(id=comment_id)
+
+        if user != comment.user:
+            return JsonResponse({'message':'INVALID_USER'}, status=401)
+
+        Comment.objects.filter(id=comment.id).delete()
+        return JsonResponse({'message': 'SUCCESS'}, status=200)
 
 class LikeView(View):
     @log_in_decorator
@@ -134,3 +190,4 @@ class LikeView(View):
 
         except JSONDecodeError:
             return JsonResponse({'message':'JSON_DECODE_ERROR'}, status=400)
+

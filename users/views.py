@@ -50,7 +50,7 @@ class LoginView(View):
                  return JsonResponse({"message" : "INVALID_PASSWORD"}, status=401)
 
               access_token = jwt.encode({"id" : user.id}, SECRET_KEY, algorithm = ALGORITHM)
-
+              print(access_token)
               return JsonResponse({
                   "message"      : "SUCCESS",
                   "access_token" : access_token

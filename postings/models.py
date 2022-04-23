@@ -22,6 +22,7 @@ class Comment(models.Model):
       created_at = models.DateTimeField(auto_now_add=True)
       user       = models.ForeignKey('users.User', on_delete=models.CASCADE)
       posting    = models.ForeignKey('Posting', on_delete=models.CASCADE)
+      parent_comment = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
 
       class Meta:
           db_table = 'comments'
